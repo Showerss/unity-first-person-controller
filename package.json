@@ -1,0 +1,11 @@
+{
+  "name": "com.firstperson.controller",
+  "version": "1.0.0",
+  "displayName": "First Person Controller",
+  "description": "Modular, reusable First Person Controller with interaction, platforming, ladders, doors, hazard zones, and HUD.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.ugui": "2.0.0"
+  }
+}
