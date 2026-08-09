@@ -1,0 +1,94 @@
+# Unity .gitattributes for a UPM package repository.
+# Adapted from https://github.com/gitattributes/gitattributes (MIT).
+#
+# Two jobs here:
+#   1. Force LF on Unity's text formats. Unity writes LF; without this, Windows
+#      checkouts rewrite them to CRLF and every .meta shows as modified.
+#   2. Route binary assets through Git LFS so the package stays cloneable.
+
+# Macros — these only work in a top-level .gitattributes, which this is,
+# because the repo root and the package root are the same folder.
+[attr]lfs               filter=lfs diff=lfs merge=lfs -text
+[attr]unity-json        eol=lf linguist-language=json
+[attr]unity-yaml        merge=unityyamlmerge eol=lf linguist-language=yaml
+
+# ── Source ──────────────────────────────────────────────────
+*.cs                    text diff=csharp
+*.cginc                 text
+*.compute               text linguist-language=hlsl
+*.hlsl                  text linguist-language=hlsl
+*.raytrace              text linguist-language=hlsl
+*.shader                text
+
+# ── Unity JSON ──────────────────────────────────────────────
+*.asmdef                unity-json
+*.asmref                unity-json
+*.inputactions          unity-json
+*.shadergraph           unity-json
+*.shadersubgraph        unity-json
+
+# ── UI Toolkit ──────────────────────────────────────────────
+*.tss                   text diff=css linguist-language=css
+*.uss                   text diff=css linguist-language=css
+*.uxml                  text linguist-language=xml linguist-detectable
+
+# ── Unity YAML ──────────────────────────────────────────────
+# .meta included: they are YAML and must merge with unityyamlmerge.
+*.anim                  unity-yaml
+*.asset                 unity-yaml
+*.controller            unity-yaml
+*.mask                  unity-yaml
+*.mat                   unity-yaml
+*.meta                  unity-yaml
+*.overrideController    unity-yaml
+*.playable              unity-yaml
+*.prefab                unity-yaml
+*.preset                unity-yaml
+*.renderTexture         unity-yaml
+*.shadervariants        unity-yaml
+*.signal                unity-yaml
+*.spriteatlas           unity-yaml
+*.spriteatlasv2         unity-yaml
+*.unity                 unity-yaml
+*.physicMaterial        unity-yaml
+*.physicsMaterial2D     unity-yaml
+
+# ── LFS: 3D models ──────────────────────────────────────────
+*.blend                 lfs
+*.dae                   lfs
+*.FBX                   lfs
+*.fbx                   lfs
+*.obj                   lfs
+
+# ── LFS: audio ──────────────────────────────────────────────
+*.aif                   lfs
+*.aiff                  lfs
+*.mp3                   lfs
+*.ogg                   lfs
+*.wav                   lfs
+
+# ── LFS: images ─────────────────────────────────────────────
+*.bmp                   lfs
+*.exr                   lfs
+*.gif                   lfs
+*.hdr                   lfs
+*.jpeg                  lfs
+*.jpg                   lfs
+*.png                   lfs
+*.psd                   lfs
+*.tga                   lfs
+*.tif                   lfs
+*.tiff                  lfs
+*.webp                  lfs
+*.cubemap               lfs
+
+# ── LFS: fonts, libs, archives ──────────────────────────────
+*.otf                   lfs
+*.ttf                   lfs
+*.dll                   lfs
+*.so                    lfs
+*.zip                   lfs
+*.7z                    lfs
+
+# Lighting bakes are binary despite the .asset extension
+LightingData.asset      binary
