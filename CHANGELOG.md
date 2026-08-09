@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release as a standalone UPM package.
+- Bundled `Runtime/Input/InputSystem_Actions.inputactions`, so the package is
+  self-contained and needs no input setup from the consumer. Moved from the
+  sandbox project with its GUID preserved, so existing scene references to it
+  keep resolving.
 - WASD movement with acceleration/deceleration and air control.
 - Manual gravity, jumping, coyote time and jump buffering.
 - Sprinting (toggle or hold) with stamina, and sprint FOV widening.

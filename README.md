@@ -57,9 +57,17 @@ Or add it to `Packages/manifest.json` directly:
 
 ### Input actions
 
+**This package ships its own actions asset** — no setup required. Assign it to your `PlayerInput` component:
+
+```
+Packages/com.firstperson.controller/Runtime/Input/InputSystem_Actions.inputactions
+```
+
+In the Project window it appears under **Packages → First Person Controller → Runtime → Input**.
+
 `PlayerInput` is used in **Send Messages** mode — the controller receives `OnMove`, `OnLook`, `OnJump`, `OnSprint`, `OnCrouch`, and `OnInteract`. There are no manual `InputAction` subscriptions to wire up.
 
-Your actions asset needs a `Player` action map with these actions:
+The bundled asset provides a `Player` action map with these actions:
 
 | Action | Type | Keyboard & Mouse | Gamepad |
 |---|---|---|---|
@@ -70,7 +78,7 @@ Your actions asset needs a `Player` action map with these actions:
 | Crouch | Button | C | Button East (B) |
 | Interact | Button (Hold) | E | Button North (Y) |
 
-> **Note:** this package does not currently ship its own `.inputactions` asset — you supply one matching the table above. Unity's default `InputSystem_Actions.inputactions` (created with any new project from the template) already matches and works as-is.
+**Customizing the bindings.** A package installed from a Git URL is immutable — Unity will not let you edit the asset in place. To change bindings, copy it into your own `Assets/` folder, edit the copy, and assign that to `PlayerInput` instead. The controller only cares about the action *names*, so any asset matching the table above works.
 
 ## Exposed state
 
