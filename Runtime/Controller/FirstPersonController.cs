@@ -206,6 +206,10 @@ public class FirstPersonController : MonoBehaviour
 
         ApplyCameraFov();
         ApplyArmAnimation();
+
+        // One-frame input flag: consumers above clear it the moment they act on
+        // it, and this backstop stops an unused press leaking into next frame.
+        _jumpPressed = false;
     }
 
     void UpdateTimers()
@@ -465,10 +469,13 @@ public class FirstPersonController : MonoBehaviour
                 _velocity.y = -2f;
             }
 
-            // Regular jump is only allowed on walkable slopes
-            if (_jumpPressed && !_isOnSteepSlope)
+            // Regular jump is only allowed on walkable slopes. A slide consumes
+            // its own jump inside ApplySlideMovement so the boosted slide speed
+            // survives the launch; do not spend the press on its behalf here.
+            if (_jumpPressed && !_isOnSteepSlope && !_isSliding)
             {
                 _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity); // kinematics: v = sqrt(h * -2g)
+                _jumpPressed = false; // consumed on use, not unconditionally
             }
         }
         else
@@ -476,8 +483,6 @@ public class FirstPersonController : MonoBehaviour
             // Apply gravity over time
             _velocity.y += _gravity * Time.deltaTime;
         }
-
-        _jumpPressed = false; // consumed and cleared internally; caller never manages this
     }
 
     void ApplyMovement()
