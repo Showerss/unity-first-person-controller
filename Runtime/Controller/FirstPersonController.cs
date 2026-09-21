@@ -182,6 +182,7 @@ public class FirstPersonController : MonoBehaviour
         }
 
         _stamina = _maxStamina;
+        _wasGrounded = true;
     }
 
     // ORCHESTRATOR — sequences the implementation each frame; caller says what, not how
@@ -198,14 +199,17 @@ public class FirstPersonController : MonoBehaviour
         else
         {
             ApplyCrouch();
-            ApplyHeadBob();
             CheckGroundStatus();
             ApplyGravityAndJumping();
             ApplyMovement();
+            ApplyHeadBob();
         }
 
         ApplyCameraFov();
         ApplyArmAnimation();
+
+        // Track vertical velocity at the end of the frame for landing impact calculation
+        _previousVelocityY = _velocity.y;
 
         // One-frame input flag: consumers above clear it the moment they act on
         // it, and this backstop stops an unused press leaking into next frame.
@@ -422,6 +426,17 @@ public class FirstPersonController : MonoBehaviour
     // DEEP IMPLEMENTATION — non-obvious decisions buried here so callers never need to know
     void CheckGroundStatus()
     {
+        // When ascending from a jump, the player is airborne regardless of proximity to ground
+        if (_velocity.y > 0.01f)
+        {
+            _isGrounded = false;
+            _groundNormal = Vector3.up;
+            _isOnSteepSlope = false;
+            _slopeSlideDirection = Vector3.zero;
+            _wasGrounded = false;
+            return;
+        }
+
         float radius = _cc.radius;
         // Center of the bottom hemisphere of the capsule
         Vector3 bottomSphereCenter = transform.position + _cc.center + Vector3.down * (_cc.height * 0.5f - radius);
@@ -457,26 +472,43 @@ public class FirstPersonController : MonoBehaviour
             _isOnSteepSlope = false;
             _slopeSlideDirection = Vector3.zero;
         }
+
+        // Landing dip calculation
+        bool landed = !_wasGrounded && _isGrounded;
+        if (landed)
+        {
+            float impactSpeed = -_previousVelocityY;
+            if (impactSpeed > _minImpactVelocity)
+            {
+                _landingDipOffset = Mathf.Min((impactSpeed - _minImpactVelocity) * _landingDipMultiplier, _maxLandingDip);
+            }
+        }
+        _wasGrounded = _isGrounded;
+
+        // Coyote time refresh
+        if (_isGrounded)
+        {
+            _coyoteTimer = _coyoteTime;
+        }
     }
 
     void ApplyGravityAndJumping()
     {
-        if (_isGrounded)
+        bool wantsJump = (_jumpPressed || _jumpBufferTimer > 0f) && !_isSliding;
+        bool canJump = (_isGrounded || _coyoteTimer > 0f) && !_isOnSteepSlope;
+
+        if (canJump && wantsJump)
+        {
+            _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity); // kinematics: v = sqrt(h * -2g)
+            _jumpPressed = false;
+            _jumpBufferTimer = 0f;
+            _coyoteTimer = 0f;
+            _isGrounded = false;
+        }
+        else if (_isGrounded && _velocity.y < 0f)
         {
             // Reset vertical velocity when grounded; small negative forces down onto slopes
-            if (_velocity.y < 0f)
-            {
-                _velocity.y = -2f;
-            }
-
-            // Regular jump is only allowed on walkable slopes. A slide consumes
-            // its own jump inside ApplySlideMovement so the boosted slide speed
-            // survives the launch; do not spend the press on its behalf here.
-            if (_jumpPressed && !_isOnSteepSlope && !_isSliding)
-            {
-                _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity); // kinematics: v = sqrt(h * -2g)
-                _jumpPressed = false; // consumed on use, not unconditionally
-            }
+            _velocity.y = -2f;
         }
         else
         {
@@ -554,6 +586,34 @@ public class FirstPersonController : MonoBehaviour
 
         // Move the CharacterController
         _cc.Move(_velocity * Time.deltaTime);
+
+        SnapToGround();
+    }
+
+    void SnapToGround()
+    {
+        if (_stepDownDistance <= 0f) return;
+        if (!_isGrounded || _isOnSteepSlope || _isSliding || _isClimbing || _jumpPressed || _jumpBufferTimer > 0f || _velocity.y > 0f)
+            return;
+
+        float radius = _cc.radius;
+        Vector3 bottomSphereCenter = transform.position + _cc.center + Vector3.down * (_cc.height * 0.5f - radius);
+        float offset = 0.1f;
+        Vector3 origin = bottomSphereCenter + Vector3.up * offset;
+        float castDistance = offset + _stepDownDistance;
+
+        if (Physics.SphereCast(origin, radius, Vector3.down, out RaycastHit hit, castDistance, _groundLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (Vector3.Angle(Vector3.up, hit.normal) <= _slopeLimit)
+            {
+                float snapDistance = hit.distance - offset;
+                if (snapDistance > 0.001f)
+                {
+                    _cc.Move(Vector3.down * snapDistance);
+                    _groundNormal = hit.normal;
+                }
+            }
+        }
     }
 
     void ApplySlideMovement()
@@ -568,12 +628,15 @@ public class FirstPersonController : MonoBehaviour
         }
 
         // 2. Slide Jump (jump out of slide with preserved boosted momentum)
-        if (_jumpPressed)
+        if (_jumpPressed || _jumpBufferTimer > 0f)
         {
             _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
             _velocity.x = _slideDirection.x * _slideSpeed;
             _velocity.z = _slideDirection.z * _slideSpeed;
             _jumpPressed = false;
+            _jumpBufferTimer = 0f;
+            _coyoteTimer = 0f;
+            _isGrounded = false;
             _wantsToCrouch = false;
             StopSlide();
             _cc.Move(_velocity * Time.deltaTime);
@@ -697,7 +760,7 @@ public class FirstPersonController : MonoBehaviour
         _velocity.z = rawDirection.z * climbSpeed * 0.5f;
 
         // Check if player jumps to dismount ladder
-        if (_jumpPressed)
+        if (_jumpPressed || _jumpBufferTimer > 0f)
         {
             _isClimbing = false;
             _currentLadder = null;
@@ -707,6 +770,9 @@ public class FirstPersonController : MonoBehaviour
             pushDirection.y = 1f; // up
             _velocity = pushDirection.normalized * Mathf.Sqrt(_jumpHeight * -2f * _gravity);
             _jumpPressed = false;
+            _jumpBufferTimer = 0f;
+            _coyoteTimer = 0f;
+            _isGrounded = false;
             
             _cc.Move(_velocity * Time.deltaTime);
             return;
