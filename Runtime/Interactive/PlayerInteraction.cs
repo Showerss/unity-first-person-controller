@@ -26,6 +26,13 @@ public class PlayerInteraction : MonoBehaviour
 
     void Update()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            _currentInteractable = null;
+            CurrentPrompt = string.Empty;
+            return;
+        }
+
         FindInteractable();
     }
 
@@ -57,6 +64,8 @@ public class PlayerInteraction : MonoBehaviour
     // Called automatically by PlayerInput SendMessages behavior when "Interact" action is performed
     void OnInteract(InputValue v)
     {
+        if (Cursor.lockState != CursorLockMode.Locked) return;
+
         if (v.isPressed && _currentInteractable != null)
         {
             _currentInteractable.Interact(gameObject);

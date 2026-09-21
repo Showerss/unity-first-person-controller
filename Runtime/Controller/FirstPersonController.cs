@@ -150,6 +150,7 @@ public class FirstPersonController : MonoBehaviour
     {
         _cc = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         if (_cameraTransform == null)
         {
@@ -324,7 +325,15 @@ public class FirstPersonController : MonoBehaviour
 
     // NARROW INTERFACE — PlayerInput "Send Messages" callbacks; one line each, no logic
     void OnMove(InputValue v)   => _moveInput   = v.Get<Vector2>();
-    void OnLook(InputValue v)   => _lookInput   = v.Get<Vector2>();
+    void OnLook(InputValue v)
+    {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            _lookInput = Vector2.zero;
+            return;
+        }
+        _lookInput = v.Get<Vector2>();
+    }
     void OnJump(InputValue v)   
     {
         if (v.isPressed)
@@ -688,6 +697,17 @@ public class FirstPersonController : MonoBehaviour
 
     void ApplyLook()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            _lookInput = Vector2.zero;
+            _currentCameraRoll = Mathf.Lerp(_currentCameraRoll, 0f, 10f * Time.deltaTime);
+            if (_cameraTransform != null)
+            {
+                _cameraTransform.localEulerAngles = new Vector3(_pitch, 0f, _currentCameraRoll);
+            }
+            return;
+        }
+
         // Rotate body around Y-axis (Yaw)
         transform.Rotate(Vector3.up, _lookInput.x * _sensitivity);
 
