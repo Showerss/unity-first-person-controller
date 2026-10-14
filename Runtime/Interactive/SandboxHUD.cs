@@ -1,3 +1,4 @@
+using FirstPerson.Interaction;
 using UnityEngine;
 using TMPro;
 
@@ -26,12 +27,25 @@ public class SandboxHUD : MonoBehaviour
         {
             _zoneText.text = "Zone: " + _currentZoneName;
         }
+
+        if (_playerInteraction != null)
+        {
+            _playerInteraction.PromptChanged += UpdatePromptDisplay;
+        }
+        UpdatePromptDisplay(_playerInteraction != null ? _playerInteraction.CurrentPrompt : InteractionPrompt.None);
+    }
+
+    void OnDestroy()
+    {
+        if (_playerInteraction != null)
+        {
+            _playerInteraction.PromptChanged -= UpdatePromptDisplay;
+        }
     }
 
     void Update()
     {
         UpdateStateDisplay();
-        UpdatePromptDisplay();
         UpdateStaminaBar();
     }
 
@@ -90,19 +104,12 @@ public class SandboxHUD : MonoBehaviour
         _stateText.text = stateStr;
     }
 
-    private void UpdatePromptDisplay()
+    private void UpdatePromptDisplay(InteractionPrompt prompt)
     {
         if (_promptText == null) return;
 
-        if (_playerInteraction != null && !string.IsNullOrEmpty(_playerInteraction.CurrentPrompt))
-        {
-            _promptText.gameObject.SetActive(true);
-            _promptText.text = _playerInteraction.CurrentPrompt;
-        }
-        else
-        {
-            _promptText.gameObject.SetActive(false);
-        }
+        _promptText.gameObject.SetActive(!prompt.IsEmpty);
+        _promptText.text = prompt.Format(_playerInteraction != null ? _playerInteraction.InteractKeyLabel : string.Empty);
     }
 
     public void SetActiveZone(string zoneName)

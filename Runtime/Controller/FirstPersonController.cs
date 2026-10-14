@@ -1,3 +1,4 @@
+using FirstPerson.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -145,10 +146,12 @@ public class FirstPersonController : MonoBehaviour
     public bool HasIFrame => _iframeTimer > 0f;
 
     Camera _camera;
+    PlayerInteraction _interaction;
 
     void Awake()
     {
         _cc = GetComponent<CharacterController>();
+        _interaction = GetComponent<PlayerInteraction>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -185,6 +188,19 @@ public class FirstPersonController : MonoBehaviour
         _stamina = _maxStamina;
         _wasGrounded = true;
     }
+
+    void OnEnable()
+    {
+        if (_interaction != null) _interaction.Interacted += HandleInteracted;
+    }
+
+    void OnDisable()
+    {
+        if (_interaction != null) _interaction.Interacted -= HandleInteracted;
+    }
+
+    // Reach-out arm gesture whenever the player interacts with something.
+    void HandleInteracted(IInteractable _) => StartDoorInteraction();
 
     // ORCHESTRATOR — sequences the implementation each frame; caller says what, not how
     void Update()
