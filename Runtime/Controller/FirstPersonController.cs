@@ -257,6 +257,26 @@ public class FirstPersonController : MonoBehaviour
         _iframeTimer = _interactionDuration;
     }
 
+    /// <summary>
+    /// Moves the player to <paramref name="position"/> facing <paramref name="yaw"/> degrees, level gaze,
+    /// with all momentum cleared so they don't carry their old velocity into the new spot.
+    /// </summary>
+    public void Teleport(Vector3 position, float yaw)
+    {
+        bool ccWasEnabled = _cc.enabled;
+        _cc.enabled = false;
+        transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yaw, 0f));
+        _cc.enabled = ccWasEnabled;
+
+        _velocity = Vector3.zero;
+        _previousVelocityY = 0f;
+        _isSliding = false;
+        _pitch = 0f;
+        if (_cameraTransform != null)
+            _cameraTransform.localEulerAngles = new Vector3(_pitch, 0f, _currentCameraRoll);
+        Physics.SyncTransforms();
+    }
+
     void ApplyArmAnimation()
     {
         if (_armTransform == null) return;
