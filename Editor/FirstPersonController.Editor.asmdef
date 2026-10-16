@@ -1,0 +1,18 @@
+{
+    "name": "FirstPersonController.Editor",
+    "rootNamespace": "FirstPerson.Editor",
+    "references": [
+        "FirstPersonController"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

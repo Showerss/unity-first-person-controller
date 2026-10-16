@@ -104,7 +104,19 @@ public class MyDevice : MonoBehaviour, IInteractable
 }
 ```
 
-Ready-made implementations are included: `Door`, `Ladder`, `MovingPlatform`, `PlatformAttachment`, `HazardZone`, `ZoneTrigger`.
+Ready-made implementations are included: `Door`, `Ladder`, `MovingPlatform`, `PlatformAttachment`, `HazardZone`, `ZoneTrigger`, `LightSwitch` and `LevelTransitionBox`. `InteractionPromptHUD` shows the prompt of whatever the player is looking at.
+
+## Game scaffolding
+
+Optional pieces most first-person games end up needing:
+
+| Component | Does |
+|---|---|
+| `GameBootstrap` | Persistent root in a Boot scene (build index 0) that additively loads the first gameplay scene. Put cross-scene systems under it. |
+| `BootstrapPlayModeLoader` (editor) | Press Play from any scene and Boot is loaded too, exactly as in a build. Does nothing unless the first Build Settings scene holds a `GameBootstrap`. |
+| `ScreenFader` | Full-screen black overlay; `FadeTo(darkness, seconds)` runs in unscaled time. |
+| `PlayerLock` | `PlayerLock.Set(player, true)` freezes movement, look and interaction for cutscenes. |
+| `WorldBoundsWarden` + `WorldBoundsWalls` + `PathBreadcrumbs` | Keep the player inside the map: the screen darkens toward the edge, then they're put back on the road. Add an `IWorldBoundsWarning` (e.g. the dialogue package's `WorldBoundsDialogueWarning`) to say something afterwards. |
 
 ## Not yet implemented
 

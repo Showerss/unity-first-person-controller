@@ -5,6 +5,18 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-16
+
+### Added
+- `Teleport(position, yaw)` on `FirstPersonController`.
+- `PlayerLock`: freeze or free the player (controller + interaction), and the feet-to-pivot height for teleports.
+- `LightSwitch`: press-E lamp, candle or brazier, with lit visuals and a toggle sound.
+- `LevelTransitionBox`: doorway volume that loads a scene (Boot stays loaded) or the next build scene, or teleports within the scene; optional lock.
+- `ScreenFader`: full-screen black overlay with unscaled-time fades.
+- `InteractionPromptHUD`: shows the current interaction prompt with the live key binding.
+- World bounds: `WorldBoundsSettings`, `WorldBoundsWalls`, `PathBreadcrumbs` and `WorldBoundsWarden` (darkens the screen toward the edge and returns the player to the road). An optional `IWorldBoundsWarning` next to the warden is shown on the black screen.
+- `GameBootstrap` (persistent Boot root that additively loads the first gameplay scene) and the editor-only `BootstrapPlayModeLoader`, which loads Boot when you press Play from another scene. It only acts when the first Build Settings scene holds a `GameBootstrap`.
+
 ## [1.0.0] - 2026-08-09
 
 ### Added
