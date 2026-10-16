@@ -5,6 +5,13 @@ All notable changes to this package are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Interaction markers: `InteractableScanner` (on the player) finds every usable interactable in range and in line of sight; `InteractionMarkerHUD` draws a tiny dot on each and the focused one's prompt (e.g. "[E] Open door") on the object itself. Instant show/hide, no animation.
+- `InteractionMarkerAnchor`: optional child marking where an interactable's dot and prompt are drawn.
+- `PlayerInteraction.CurrentAnchor`, `CameraTransform` and `InteractLayers`.
+
 ## [1.1.0] - 2026-10-16
 
 ### Added

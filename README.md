@@ -106,6 +106,16 @@ public class MyDevice : MonoBehaviour, IInteractable
 
 Ready-made implementations are included: `Door`, `Ladder`, `MovingPlatform`, `PlatformAttachment`, `HazardZone`, `ZoneTrigger`, `LightSwitch` and `LevelTransitionBox`. `InteractionPromptHUD` shows the prompt of whatever the player is looking at.
 
+### Interaction markers
+
+The standard RPG cue: a tiny dot on every usable thing nearby, which becomes the prompt ("[E] Open door") on the object itself once the player is in reach and looking at it.
+
+1. Add `InteractableScanner` next to `PlayerInteraction` on the player. Range (default 8 m), scan interval and line-of-sight are on it.
+2. Add a screen-space canvas with `InteractionMarkerHUD`, a full-screen `Markers` rect, a disabled dot `Image` (the template) and a prompt box with a `TMP_Text`, all under `Markers`. Assign the player's `PlayerInteraction`, `InteractableScanner` and camera.
+3. Use it instead of `InteractionPromptHUD`, not alongside it, or the prompt shows twice.
+
+Every `IInteractable` with a non-empty prompt gets a dot, so nothing needs changing on the interactables. Dots and prompt sit at the collider's centre; add an `InteractionMarkerAnchor` to a child (an NPC's head, a door handle) to move them.
+
 ## Game scaffolding
 
 Optional pieces most first-person games end up needing:

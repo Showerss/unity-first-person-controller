@@ -29,11 +29,23 @@ namespace FirstPerson.Interaction
 
         readonly RaycastHit[] _hits = new RaycastHit[MaxHits];
         PlayerInput _playerInput;
+        Collider _bestCollider;
+        Collider _currentCollider;
+        Transform _currentAnchor;
 
         /// <summary>The interactable the player is looking at, or null.</summary>
         public IInteractable Current { get; private set; }
 
         public InteractionPrompt CurrentPrompt { get; private set; }
+
+        /// <summary>World point where the focused target's prompt is drawn; see <see cref="InteractionMarkerAnchor"/>.</summary>
+        public Vector3 CurrentAnchor => InteractionMarkerAnchor.Position(_currentAnchor, _currentCollider, Current as Component);
+
+        /// <summary>The look ray's starting point, shared with <see cref="InteractableScanner"/>.</summary>
+        public Transform CameraTransform => _cameraTransform;
+
+        /// <summary>Layers the look ray can hit.</summary>
+        public LayerMask InteractLayers => _interactLayers;
 
         /// <summary>The Interact binding in the active control scheme, e.g. "E".</summary>
         public string InteractKeyLabel { get; private set; } = "E";
@@ -78,6 +90,7 @@ namespace FirstPerson.Interaction
             }
 
             IInteractable target = FindInteractable(out InteractionPrompt prompt);
+            _currentCollider = target != null ? _bestCollider : null;
             SetFocus(target, prompt);
         }
 
@@ -133,6 +146,7 @@ namespace FirstPerson.Interaction
                         best = candidate;
                         bestPrompt = candidatePrompt;
                         bestDistance = hit.distance;
+                        _bestCollider = hit.collider;
                     }
                 }
                 else if (!isSphere && !hit.collider.isTrigger && hit.distance < blockDistance)
@@ -156,6 +170,8 @@ namespace FirstPerson.Interaction
             if (!ReferenceEquals(target, Current))
             {
                 Current = target;
+                _currentAnchor = InteractionMarkerAnchor.Find(target as Component);
+                if (target == null) _currentCollider = null;
                 FocusChanged?.Invoke(target);
             }
 
