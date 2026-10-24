@@ -799,7 +799,8 @@ public class FirstPersonController : MonoBehaviour
         if (_cameraTransform != null)
         {
             float effectiveCrouchHeight = _isSliding ? _slideHeight : _crouchHeight;
-            float targetCamY = (_isCrouching || _isSliding) ? (_defaultCameraY - (_defaultHeight - effectiveCrouchHeight) * 0.5f) : _defaultCameraY;
+            // Feet stay planted, so the capsule top drops by the full height difference; the eye must too.
+            float targetCamY = (_isCrouching || _isSliding) ? (_defaultCameraY - (_defaultHeight - effectiveCrouchHeight)) : _defaultCameraY;
             _currentCameraY = Mathf.MoveTowards(_currentCameraY, targetCamY, speed);
         }
     }

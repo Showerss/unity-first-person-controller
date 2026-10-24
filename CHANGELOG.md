@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `InteractionMarkerAnchor`: optional child marking where an interactable's dot and prompt are drawn.
 - `PlayerInteraction.CurrentAnchor`, `CameraTransform` and `InteractLayers`.
 
+### Fixed
+- `GameBootstrap` no longer loads the first scene on top of whichever gameplay scene you pressed Play from (e.g. a sandbox scene); before, only the first scene itself was recognised.
+
 ## [1.1.0] - 2026-10-16
 
 ### Added

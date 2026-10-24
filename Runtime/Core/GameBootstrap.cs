@@ -25,6 +25,7 @@ namespace FirstPerson.Core
             }
 
             _instance = this;
+            Scene bootScene = gameObject.scene;
             DontDestroyOnLoad(gameObject);
 
             if (string.IsNullOrEmpty(_firstSceneName))
@@ -33,14 +34,26 @@ namespace FirstPerson.Core
                 return;
             }
 
-            // Already loaded when entering play mode from a gameplay scene in the editor.
-            if (SceneManager.GetSceneByName(_firstSceneName).isLoaded)
+            // Entering play mode from a gameplay scene in the editor (the first scene or any other, e.g. a sandbox):
+            // that scene is already loaded, so don't pull the first scene in on top of it.
+            if (IsOtherSceneLoaded(bootScene))
             {
                 return;
             }
 
             AsyncOperation load = SceneManager.LoadSceneAsync(_firstSceneName, LoadSceneMode.Additive);
             load.completed += _ => SceneManager.SetActiveScene(SceneManager.GetSceneByName(_firstSceneName));
+        }
+
+        private static bool IsOtherSceneLoaded(Scene bootScene)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.isLoaded && scene != bootScene) return true;
+            }
+
+            return false;
         }
 
         private void OnDestroy()
