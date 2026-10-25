@@ -3,12 +3,13 @@ using UnityEngine;
 /// <summary>
 /// Footstep, jump and landing sounds for the FirstPersonController.
 /// Steps are distance-based, so cadence follows actual speed; crouching is slower and quieter, sprinting louder.
-/// Plays 2D on its own AudioSource. Surface-specific sets can come later by swapping the clip arrays.
+/// Plays 2D on its own AudioSource. Ground tagged with <see cref="FootstepSurfaceTag"/> swaps in that surface's clips;
+/// anything else uses the default clips below.
 /// </summary>
 [RequireComponent(typeof(FirstPersonController))]
 public sealed class PlayerFootsteps : MonoBehaviour
 {
-    [Header("Clips")]
+    [Header("Clips (default surface)")]
     [Tooltip("Picked at random, never the same one twice in a row.")]
     [SerializeField] AudioClip[] _stepClips = new AudioClip[0];
     [SerializeField] AudioClip _jumpClip;
@@ -29,6 +30,10 @@ public sealed class PlayerFootsteps : MonoBehaviour
     [Tooltip("Random pitch spread around 1 so repeated steps don't sound mechanical.")]
     [SerializeField, Range(0f, 0.3f)] float _pitchJitter = 0.08f;
 
+    [Header("Surface detection")]
+    [Tooltip("Layers the downward surface probe can hit.")]
+    [SerializeField] LayerMask _groundMask = ~0;
+
     [Header("Landing")]
     [Tooltip("Ignore landings after shorter airtime (stairs, small bumps).")]
     [SerializeField, Min(0f)] float _minAirTime = 0.15f;
@@ -43,6 +48,8 @@ public sealed class PlayerFootsteps : MonoBehaviour
     float _fallSpeed;
     bool _wasGrounded = true;
     int _lastStep = -1;
+    Collider _lastGround;
+    FootstepSurface _surface;
 
     void Awake()
     {
@@ -60,7 +67,10 @@ public sealed class PlayerFootsteps : MonoBehaviour
 
         if (grounded && !_wasGrounded && _airTime >= _minAirTime)
         {
-            Play(_landClip, _landVolume * Mathf.Clamp01(_fallSpeed / _hardLandingSpeed + 0.3f));
+            FootstepSurface surface = CurrentSurface();
+            AudioClip land = surface != null && surface.LandClip != null ? surface.LandClip : _landClip;
+            float surfaceVolume = surface != null ? surface.Volume : 1f;
+            Play(land, _landVolume * surfaceVolume * Mathf.Clamp01(_fallSpeed / _hardLandingSpeed + 0.3f));
             _distance = 0f; // next step a full stride after landing
         }
         else if (!grounded && _wasGrounded && velocity.y > 0.5f && !_controller.IsClimbing)
@@ -100,18 +110,38 @@ public sealed class PlayerFootsteps : MonoBehaviour
         _distance -= stride;
 
         float volume = _controller.IsCrouching ? _crouchVolume : _controller.IsSprinting ? _sprintVolume : _walkVolume;
-        Play(NextStepClip(), volume);
+        FootstepSurface surface = CurrentSurface();
+        AudioClip[] clips = surface != null && surface.StepClips.Length > 0 ? surface.StepClips : _stepClips;
+        Play(NextStepClip(clips), volume * (surface != null ? surface.Volume : 1f));
     }
 
-    AudioClip NextStepClip()
+    /// <summary>Surface under the player's feet, or null for the default set. Cached per ground collider.</summary>
+    FootstepSurface CurrentSurface()
     {
-        if (_stepClips.Length == 0) return null;
-        if (_stepClips.Length == 1) return _stepClips[0];
-        if (_lastStep < 0) return _stepClips[_lastStep = Random.Range(0, _stepClips.Length)];
-        int i = Random.Range(0, _stepClips.Length - 1);
+        Vector3 origin = transform.TransformPoint(_cc.center);
+        float reach = _cc.height * 0.5f + _cc.skinWidth + 0.3f;
+        if (!Physics.SphereCast(origin, _cc.radius * 0.5f, Vector3.down, out RaycastHit hit, reach, _groundMask, QueryTriggerInteraction.Ignore))
+            return null;
+
+        if (hit.collider != _lastGround)
+        {
+            _lastGround = hit.collider;
+            FootstepSurfaceTag tag = hit.collider.GetComponentInParent<FootstepSurfaceTag>();
+            _surface = tag != null ? tag.Surface : null;
+            _lastStep = -1; // clip index belongs to the previous set
+        }
+        return _surface;
+    }
+
+    AudioClip NextStepClip(AudioClip[] clips)
+    {
+        if (clips.Length == 0) return null;
+        if (clips.Length == 1) return clips[0];
+        if (_lastStep < 0 || _lastStep >= clips.Length) return clips[_lastStep = Random.Range(0, clips.Length)];
+        int i = Random.Range(0, clips.Length - 1);
         if (i >= _lastStep) i++; // skip the previous clip
         _lastStep = i;
-        return _stepClips[i];
+        return clips[i];
     }
 
     void Play(AudioClip clip, float volume)
