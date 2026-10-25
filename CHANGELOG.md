@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `PlayerFootsteps`: distance-based footsteps (crouch slower/quieter, sprint louder), jump and landing sounds (landing volume scales with fall speed). Random clip without repeats and slight pitch jitter.
 - Interaction markers: `InteractableScanner` (on the player) finds every usable interactable in range and in line of sight; `InteractionMarkerHUD` draws a tiny dot on each and the focused one's prompt (e.g. "[E] Open door") on the object itself. Instant show/hide, no animation.
 - `InteractionMarkerAnchor`: optional child marking where an interactable's dot and prompt are drawn.
 - `PlayerInteraction.CurrentAnchor`, `CameraTransform` and `InteractLayers`.
